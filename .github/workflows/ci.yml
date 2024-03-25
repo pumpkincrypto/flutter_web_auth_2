@@ -22,7 +22,7 @@ jobs:
       - name: Initialize workspace
         run: melos bootstrap
       - name: Check format
-        run: melos exec -- dart format --output=none --set-exit-if-changed .
+        run: melos format --output none --set-exit-if-changed
 
   lint:
     name: Lint
@@ -40,4 +40,4 @@ jobs:
       - name: Initialize workspace
         run: melos bootstrap
       - name: Lint using flutter analyze
-        run: melos exec -- flutter analyze
+        run: melos analyze
