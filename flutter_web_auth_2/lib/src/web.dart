@@ -181,4 +181,7 @@ class FlutterWebAuth2WebPlugin extends FlutterWebAuth2Platform {
 
     return completer.future;
   }
+
+  @override
+  Future<void> clearAllDanglingCalls() async {}
 }
