@@ -1,3 +1,8 @@
+## 3.1.2
+
+- 🐛 Fix recursion errors in Flutter `3.22.0`
+- 🌹 Update `melos` to `5.1.0` to have cleaner CI commands
+
 ## 3.1.1
 
 - 🐛 Fix null-safe options (again)
