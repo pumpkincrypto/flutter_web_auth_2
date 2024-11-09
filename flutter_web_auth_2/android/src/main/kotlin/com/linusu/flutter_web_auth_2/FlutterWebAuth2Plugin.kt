@@ -1,5 +1,8 @@
 package com.linusu.flutter_web_auth_2
 
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,6 +19,7 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
 class FlutterWebAuth2Plugin(
+    private var activity: Activity? = null,
     private var context: Context? = null,
     private var channel: MethodChannel? = null
 ) : MethodCallHandler, FlutterPlugin {
@@ -23,14 +27,15 @@ class FlutterWebAuth2Plugin(
         val callbacks = mutableMapOf<String, Result>()
     }
 
-    private fun initInstance(messenger: BinaryMessenger, context: Context) {
+    private fun initInstance(messenger: BinaryMessenger, context: Context, activity: Activity) {
+        this.activity = activity
         this.context = context
         channel = MethodChannel(messenger, "flutter_web_auth_2")
         channel?.setMethodCallHandler(this)
     }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        initInstance(binding.binaryMessenger, binding.applicationContext)
+        initInstance(binding.binaryMessenger, binding.applicationContext, binding.getActivity)
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -56,7 +61,7 @@ class FlutterWebAuth2Plugin(
                 if (targetPackage != null) {
                     intent.intent.setPackage(targetPackage)
                 }
-                intent.launchUrl(context!!, url)
+                intent.launchUrl(activity!!, url)
             }
 
             "cleanUpDanglingCalls" -> {
