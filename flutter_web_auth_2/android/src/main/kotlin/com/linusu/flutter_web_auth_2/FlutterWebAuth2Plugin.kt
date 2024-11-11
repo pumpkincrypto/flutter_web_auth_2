@@ -17,25 +17,28 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.plugin.common.PluginRegistry.NewIntentListener;
 
 class FlutterWebAuth2Plugin(
     private var activity: Activity? = null,
+    private var binding: ActivityPluginBinding?= null,
     private var context: Context? = null,
     private var channel: MethodChannel? = null
-) : MethodCallHandler, FlutterPlugin {
+) : MethodCallHandler, FlutterPlugin, ActivityAware, NewIntentListener{
     companion object {
         val callbacks = mutableMapOf<String, Result>()
     }
 
-    private fun initInstance(messenger: BinaryMessenger, context: Context, activity: Activity) {
-        this.activity = activity
+    private fun initInstance(messenger: BinaryMessenger, context: Context) {
         this.context = context
         channel = MethodChannel(messenger, "flutter_web_auth_2")
         channel?.setMethodCallHandler(this)
     }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        initInstance(binding.binaryMessenger, binding.applicationContext, binding.getActivity)
+        initInstance(binding.binaryMessenger, binding.applicationContext)
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
@@ -54,7 +57,7 @@ class FlutterWebAuth2Plugin(
                 val intent = CustomTabsIntent.Builder().build()
                 val keepAliveIntent = Intent(context, KeepAliveService::class.java)
 
-                intent.intent.addFlags(options["intentFlags"] as Int)
+                //intent.intent.addFlags(options["intentFlags"] as Int)
                 intent.intent.putExtra("android.support.customtabs.extra.KEEP_ALIVE", keepAliveIntent)
 
                 val targetPackage = findTargetBrowserPackageName(options)
@@ -150,5 +153,54 @@ class FlutterWebAuth2Plugin(
         )
         return value == packageName
     }
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        this.binding = binding
+        activity = binding.getActivity()
+        binding.addOnNewIntentListener(this)
+    }
 
+    override fun onDetachedFromActivity() {
+        if (binding != null) {
+            binding?.removeOnNewIntentListener(this)
+        }
+        binding = null
+        activity = null
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+        onDetachedFromActivity()
+    }
+
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        onAttachedToActivity(binding)
+    }
+
+    override fun onNewIntent(intent: Intent):Boolean {
+        return handleIntent(intent)
+    }
+
+    private fun fixAutoVerifyNotWorks(intent: Intent?): Uri? {
+        if (intent?.action == Intent.ACTION_SEND && "text/plain" == intent.type) {
+            return intent.getStringExtra(Intent.EXTRA_TEXT)?.let {
+                try {
+                    //scheme://host/path#id_token=xxx
+                    return Uri.parse(it)
+                } catch (e: Exception) {
+                    return null
+                }
+            }
+        }
+        return null
+    }
+
+    private fun handleIntent(intent: Intent): Boolean {
+        if (intent == null) return false
+        val url = intent?.data ?: fixAutoVerifyNotWorks(intent)
+        val scheme = url?.scheme
+        if (scheme == null) return false
+        if (scheme != null) {
+            callbacks.remove(scheme)?.success(url.toString())
+        }
+        return true
+    }
 }
