@@ -24,5 +24,5 @@ class FlutterWebAuth2MethodChannel extends FlutterWebAuth2Platform {
 
   @override
   Future<bool> isInstallChrome() async =>
-      _channel.invokeMethod<bool>('isInstallChrome');
+      (await _channel.invokeMethod<bool>('isInstallChrome')) ?? false;
 }
