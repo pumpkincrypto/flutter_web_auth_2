@@ -93,4 +93,8 @@ class FlutterWebAuth2 {
     await _platform.clearAllDanglingCalls();
     WidgetsBinding.instance.removeObserver(_resumedObserver);
   }
+
+  static Future<bool> isInstallChrome() {
+    return _platform.isInstallChrome();
+  }
 }

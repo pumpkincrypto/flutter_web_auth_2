@@ -77,6 +77,11 @@ class FlutterWebAuth2Plugin(
                 resultCallback.success(null)
             }
 
+            "isInstallChrome" -> {
+                val allBrowsers = getInstalledBrowsers()
+                resultCallback.success(allBrowsers.contains("com.android.chrome"))
+            }
+
             else -> resultCallback.notImplemented()
         }
     }

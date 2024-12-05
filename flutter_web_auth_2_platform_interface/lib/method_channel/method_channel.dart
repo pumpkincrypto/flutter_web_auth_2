@@ -21,4 +21,8 @@ class FlutterWebAuth2MethodChannel extends FlutterWebAuth2Platform {
   @override
   Future clearAllDanglingCalls() async =>
       _channel.invokeMethod('cleanUpDanglingCalls');
+
+  @override
+  Future<bool> isInstallChrome() async =>
+      _channel.invokeMethod('isInstallChrome');
 }
